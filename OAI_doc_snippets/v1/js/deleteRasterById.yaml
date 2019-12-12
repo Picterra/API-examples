@@ -1,0 +1,23 @@
+lang: JavaScript 
+label: JS (fetch, ES8) 
+source: |
+  // Wrap in an async function (up to user: full error management)
+  if ( /* Node JS */ ) {
+    var fetch = require('node-fetch') // https://www.npmjs.com/package/node-fetch
+    var Headers = fetch.Headers
+  } else if ( /* Browser */ ) { 
+    var fetch = window.fetch     // https://caniuse.com/#feat=fetch, https://github.com/github/fetch
+    var Headers = window.Headers // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+  }
+  const apiKey = '123456789'  // Get it on Picterra platform
+  const apiServer = 'https://app.picterra.ch/public/v1'
+  const rasterId = '123e4567-e89b-12d3-a456-426655440000'
+  const options = { 
+    method: 'DELETE',
+    headers: new Headers({'X-Api-Key': apiKey})
+  }
+  var response = await fetch(
+    `${apiServer}/rasters/${rasterId}/`,
+    options
+  )
+  return (response.status != 204)

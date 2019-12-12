@@ -69,7 +69,7 @@ async function upload(filePath, fileName) {
         method: 'PUT',
         body: file, 
         headers: new Headers({
-            'Content-Type': 'multipart/form-data',
+            //'Content-Type': 'multipart/form-data',
             'Content-Length': size
         })
     }

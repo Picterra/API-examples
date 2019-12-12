@@ -1,0 +1,27 @@
+lang: JavaScript 
+label: JS (fetch, ES8) 
+source: |
+  // Wrap in an async function (up to user full errors management)
+  if ( /* Node JS */ ) {
+    var fs = require('fs')  // https://nodejs.org/api/fs.html
+    var fetch = require('node-fetch') // https://www.npmjs.com/package/node-fetch
+    var Headers = fetch.Headers
+  } else if ( /* Browser */ ) { 
+    var fetch = window.fetch     // https://caniuse.com/#feat=fetch, https://github.com/github/fetch
+    var Headers = window.Headers // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+  }
+  const apiKey = '123456789'  // Get it on Picterra platform
+  const apiServer = 'https://app.picterra.ch/public/api/v1'
+  const resultId = '46b2419b-6abe-44ec-b612-c4e77c2275f9' // Obtained after a detection run start
+  const options = { headers: new Headers({ 'X-Api-Key': apiKey }) }
+  const response = await fetch(
+    `${apiServer}/results/${resultId}/`, 
+    options
+  )
+  if (response.status == 200) {
+    const data = await response.json()
+    return data  // Once "ready" is true you can download prediction results at "result_url"
+  } else {
+    console.error(response.status)
+    return false  // Error checking detection progress
+  }

@@ -1,0 +1,24 @@
+lang: JavaScript 
+label: JS (fetch, ES8) 
+source: |
+  // Wrap in an async function (up to user full errors management)
+  if ( /* Node JS */ ) {
+    var fetch = require('node-fetch') // https://www.npmjs.com/package/node-fetch
+    var Headers = fetch.Headers
+  } else if ( /* Browser */ ) { 
+    var fetch = window.fetch     // https://caniuse.com/#feat=fetch, https://github.com/github/fetch
+    var Headers = window.Headers // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+  }
+  const apiKey = '123456789'  // Get it on the picterra platform
+  const apiServer = 'https://app.picterra.ch/public/api/v1'
+  const endpoint = apiServer + '/detectors/'
+  const response = await fetch(
+    endpoint,
+    {headers: new Headers({'X-Api-Key': apiKey})}
+  )
+  if (response.status == 200) {
+    const data = await response.json()
+    return data // [{"name": "airplane_detector", "id": "aass"}, {}, ..]
+  } else {
+    return false
+  }

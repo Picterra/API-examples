@@ -1,0 +1,14 @@
+lang: Python
+label: Python (requests, py3)
+source: |
+  # Up to user: error management
+  import requests  # https://pypi.org/project/requests/
+  api_key = "123456789"  # Get it on the Picterra platform
+  server_url = "https://app.picterra.ch/public/api/v1"
+  result_id = "4a53e4000-c89b-12r2-b456-126655440044"
+  url = '%s/results/%s/' % (server_url, result_id)
+  headers =  { 'X-Api-Key': api_key } 
+  r = requests.get(url, headers=headers)
+  assert r.status_code == 200, "Error detailing detection result"
+  if r.json()["ready"]:
+    print(r.json()["result_url"])  # "https://storage.example.com/387hf57.json"

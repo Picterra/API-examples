@@ -1,0 +1,44 @@
+lang: JavaScript 
+label: JS (fetch, ES8) 
+source: |
+  // Wrap in an async function (up to user full errors management)
+  if ( /* Node JS */ ) {
+    var fetch = require('node-fetch') // https://www.npmjs.com/package/node-fetch
+    var Headers = fetch.Headers
+  } else if ( /* Browser */ ) { 
+    var fetch = window.fetch     // https://caniuse.com/#feat=fetch, https://github.com/github/fetch
+    var Headers = window.Headers // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+  }
+  const sleep = s => new Promise(resolve => setTimeout(resolve, s * 1000))
+  const apiKey = '123456789'  // Get it on the picterra platform
+  const apiServer = 'https://app.picterra.ch/public/api/v1'
+  const rasterId = 'f51c4c3a-9e4e-4ab0-b10c-82eeb15804ab' // uploaded, but not processed
+  let response, data, isReady 
+  const options = {
+    method: 'POST',
+    headers: new Headers({ 'X-Api-Key': apiKey })
+  }
+  response = await fetch(  // Start raster commit
+    `${apiServer}/rasters/${rasterId}/commit/`,
+    options
+  )
+  if (response.status != 201)
+      throw new Error('Error')
+  // Here this method ends, follows full upload workflow
+  data = await response.json()
+  const pollInterval = data.poll_interval
+  const timeout = Date.now() + (10 * 60 * 1000)  // 10 minutes timeout for polling
+  isReady = false
+  do {  // Check raster commit status
+      await sleep(pollInterval)
+      response = await fetch(
+        `${apiServer}/rasters/${rasterId}/`,
+        { headers: new Headers({ 'X-Api-Key': apiKey }) }
+      )
+      if (Date.now() > timeout || response.status != 200)
+        break
+      data = await response.json()
+      isReady = (data.status == "ready")
+  }
+  while (!isReady)
+  return isReady // If true your raster has been successfully committed

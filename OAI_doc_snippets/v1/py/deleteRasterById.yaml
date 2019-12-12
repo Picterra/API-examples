@@ -1,0 +1,13 @@
+lang: Python
+label: Python (requests, py3)
+source: |
+  # Up to user: errors management
+  import requests  # https://pypi.org/project/requests/
+  api_key = "123456789"  # Get it on the Picterra platform
+  server_url = "https://app.picterra.ch/public/api/v1"
+  raster_id = '4bbe75e2-a296-4309-8ad8-75cbd7354037'
+  url = '%s/rasters/%s/' % (server_url, raster_id)
+  headers = { 'X-Api-Key': api_key }
+  r = requests.delete(url, headers=headers)
+  assert r.status_code == 204, "Error deleting raster"
+  print("Raster deleted")

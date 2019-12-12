@@ -1,0 +1,13 @@
+lang: Python
+label: Python (requests, py3)
+source: |
+  # Up to user: errors management
+  import requests  # https://pypi.org/project/requests/
+  api_key = "123456789"  # Get it on the Picterra platform
+  server_url = "https://app.picterra.ch/public/api/v1"
+  raster_id = '123e4567-e89b-12d3-a456-426655440000'
+  url = '%s/rasters/%s/' % (server_url, raster_id)
+  headers = { 'X-Api-Key': api_key } 
+  r = requests.get(url, headers=headers)
+  assert r.status_code == 200, "Error detailing raster"
+  print(r.json()["name"]) # "My beautiful raster"

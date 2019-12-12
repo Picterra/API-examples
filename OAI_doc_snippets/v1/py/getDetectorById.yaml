@@ -1,0 +1,13 @@
+lang: Python
+label: Python (requests, py3)
+source: |
+  # Up to user: error management
+  import requests  # https://pypi.org/project/requests/
+  server_url = 'https://app.picterra.ch/public/api/v1'
+  api_key = '123456789'  # Get it on Picterra platform
+  detector_id = 'cd4e4567-c66b-16r2-ba16-126655440088' # A trained detector
+  url = '%s/detectors/%s/' % (server_url, detector_id)
+  headers =  { 'X-Api-Key': api_key }
+  r = requests.get(url, headers=headers)
+  assert r.status_code == 200, "Error detailing detector"
+  print(r.json()["name"]) # "My ships detector"

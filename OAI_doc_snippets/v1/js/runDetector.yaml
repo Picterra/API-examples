@@ -1,0 +1,53 @@
+lang: JavaScript 
+label: JS (fetch, ES8) 
+source: |
+  // Wrap in an async function (up to user full errors management)
+  if ( /* Node JS */ ) {
+    var fs = require('fs')  // https://nodejs.org/api/fs.html
+    var fetch = require('node-fetch') // https://www.npmjs.com/package/node-fetch
+    var Headers = fetch.Headers
+  } else if ( /* Browser */ ) { 
+    var fetch = window.fetch     // https://caniuse.com/#feat=fetch, https://github.com/github/fetch
+    var Headers = window.Headers // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+  }
+  const sleep = s => new Promise(resolve => setTimeout(resolve, s * 1000))
+  const apiKey = '123456789'  // Get it on the picterra platform
+  const apiServer = 'https://app.picterra.ch/public/api/v1'
+  const detectorId = 'cd4e4567-c66b-16r2-ba16-126655440088'  // A trained custom detector
+  const rasterId = 'da3298a3-e6d8-430e-b2d6-08965c23e20b'   // A raster uploaded and committed 
+  let options, response, data, isReady 
+  options = { 
+    method: 'POST',
+    headers: new Headers({
+      'content-type': 'application/json',
+      'X-Api-Key': apiKey
+    }),
+    body: JSON.stringify({
+      'raster_id': rasterId
+    })
+  }
+  response = await fetch(  // Start detection
+    `${apiServer}/detectors/${detectorId}/run/`,
+    options
+  )
+  if (response.status != 201)
+    throw new Error("Error starting detection")
+  /* Here the method ends, following full detection iter */
+  data = await response.json()
+  const pollInterval = data.poll_interval
+  const resultId = data.result_id // e.g. "123e4567-e89b-12d3-a456-426655440000"
+  const timeout = Date.now() + (10 * 60 * 1000)  // 10 minutes timeout for polling
+  isReady = false
+  do {  // Check result status
+    await sleep(pollInterval)
+    response = await fetch(
+      `${apiServer}/results/${resultId}/`,
+      { headers: new Headers({ 'X-Api-Key': apiKey }) }
+    )
+    if (response.status != 200)
+      throw new Error("Error checking result")
+    data = await response.json()
+    isReady = data.ready
+  }
+  while ((!isReady) && (Date.now() < timeout))  // Poll until complete
+  return isReady // If True you can download detection results at data.result_url)

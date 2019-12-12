@@ -1,0 +1,28 @@
+lang: Python
+label: Python (requests, py3)
+source: |
+  # Up to user: errors management
+  import os
+  import time
+  import requests   # https://pypi.org/project/requests/
+  api_key = "123456789"  # Get it on the Picterra platform
+  server_url = "https://app.picterra.ch/public/api/v1"
+  headers =  { 'X-Api-Key': api_key }
+  raster_id = '60b83bb7-e46c-4ddb-bfc2-a812e9281124'
+  url =  "%s/rasters/%s/commit/" % (server_url, raster_id)
+  r = requests.post(url, headers=headers)  # Commit raster
+  response = r.json()
+  assert "poll_interval" in response, "Error committing"
+  # Here this method ends, follows remaining upload workflow
+  poll_interval = response["poll_interval"]
+  url = server_url + "/rasters/%s/" % raster_id
+  timeout = time.time() +(10 * 60)  # 15 minutes timeout for polling
+  while True:  # Check raster commit status
+    time.sleep(poll_interval)
+    r = requests.get(url, headers=headers)
+    if r.json()["status"] in ("ready", "failed"):
+      break
+    if time.time() > timeout:
+      break
+  assert r.json()["status"] == "ready", "Error uploading"
+  print("Your raster is ready")

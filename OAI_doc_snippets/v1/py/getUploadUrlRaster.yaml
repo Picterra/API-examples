@@ -1,0 +1,42 @@
+lang: Python
+label: Python (requests, py3)
+source: |
+  # Up to user: errors management
+  import os
+  import time
+  import requests   # https://pypi.org/project/requests/
+  api_key = "123456789"  # Get it on the Picterra platform
+  server_url = "https://app.picterra.ch/public/api/v1"
+  file_path = "raster.tif"
+  headers =  { 'X-Api-Key': api_key }
+  url = server_url + "/rasters/upload/file/"
+  data = {'name': 'image88'}  # Raster name is optional
+  r = requests.post(url, headers=headers, data=data)  # Get upload URL
+  assert r.status_code == 201 
+  # Here this method ends, follows full upload workflow  
+  response = r.json() 
+  upload_url = response["upload_url"]
+  raster_id = response["raster_id"]
+  size = os.stat(file_path).st_size
+  with open(file_path, 'rb') as f: # open image file as binary
+      data = f.read()
+      f.close()
+      headers = { 'Content-Length': str(size) }
+      r = requests.put(upload_url, headers=headers, data=data)  # Upload raster
+      headers =  { 'X-Api-Key': api_key }
+      url = server_url + "/rasters/%s/commit/" % raster_id
+      r = requests.post(url, headers=headers)  # Commit raster
+      response = r.json()
+      poll_interval = response["poll_interval"]
+      headers =  { 'X-Api-Key': api_key }
+      url = server_url + "/rasters/%s/" % raster_id
+      timeout = time.time() +(10 * 60)  # 15 minutes timeout for polling
+      while True:  # Check raster commit status
+          time.sleep(poll_interval)
+          r = requests.get(url, headers=headers)
+          if r.json()["status"] in ("ready", "failed"):
+              break
+          if time.time() > timeout:
+            break
+      assert r.json()["status"] == "ready", "Error uploading"
+      print("Your raster is ready")

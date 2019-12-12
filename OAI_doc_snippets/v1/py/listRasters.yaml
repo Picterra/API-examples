@@ -1,0 +1,13 @@
+lang: Python
+label: Python (requests, py3)
+source: |
+  # Up to user: errors management
+  import requests  # https://pypi.org/project/requests/
+  url = 'https://app.picterra.ch/public/api/v1/rasters/'
+  api_key = '123456789' # Get in on Picterra platform
+  api_server = 'https://app.picterra.ch/public/api/v1'
+  headers =  { 'X-Api-Key': api_key }  
+  url = api_server + '/rasters/'
+  r = requests.get(url, headers=headers)
+  assert r.status_code == 200, "Error listing rasters"
+  print(r.json()) # [{"name": "raster", "id": "aass"}, {}, ..]

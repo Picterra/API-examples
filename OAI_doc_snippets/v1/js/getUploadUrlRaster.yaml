@@ -1,0 +1,86 @@
+lang: JavaScript 
+label: JS (fetch, ES8) 
+source: |
+  // Wrap in an async function (up to user full errors management)
+  if ( /* Node JS */ ) {
+    var fs = require('fs')  // https://nodejs.org/api/fs.html
+    var fetch = require('node-fetch') // https://www.npmjs.com/package/node-fetch
+    var Headers = fetch.Headers
+  } else if ( /* Browser */ ) { 
+    var fetch = window.fetch     // https://caniuse.com/#feat=fetch, https://github.com/github/fetch
+    var Headers = window.Headers // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+  }
+  const imagePath = '/path/to/image/file'  // Path to the raster to upload
+  const sleep = s => new Promise(resolve => setTimeout(resolve, s * 1000))
+  const apiKey = '123456789'  // Get it on the picterra platform
+  const apiServer = 'https://app.picterra.ch/public/api/v1'
+  let options, response, data, file, size, isReady, uploadUrl, rasterId 
+  options = {  // JSON body with raster name is optional
+    method: 'POST',
+    headers: new Headers({
+      'content-type': 'application/json',
+      'X-Api-Key': apiKey
+    }),
+    body: JSON.stringify({
+      'name': 'image12' // name of the image to upload
+    })
+  }
+  response = await fetch(  // Get upload URL
+    `${apiServer}/rasters/upload/file/`,
+    options
+  )
+  if (response.status != 201)
+    throw new Error("Error getting raster upload URL")
+  // Here this method ends, follows remaining full upload workflow  
+  data = await response.json()
+  uploadUrl = data.upload_url // e.g. "https://storage.picterra.ch?id=AEnB2UmSEvVl"
+  rasterId = data.raster_id // e.g. "123e4567-e89b-12d3-a456-426655440000"
+  if ( /* Node JS */ ) {
+    file = await fs.createReadStream(imagePath) 
+    size = fs.statSync(imagePath)["size"]
+  } else if( /* Browser */ ) { // e.g. we upload with an HTML form 
+    file = document.querySelector('input[type="file"]#file').files[0]
+    size = file.size
+  }
+  options = {
+    method: 'PUT',
+    body: file, 
+    headers: new Headers({ 'content-length': size })
+  }
+  response = await fetch(  // Upload raster
+    uploadUrl,
+    options
+  )
+  if (response.status != 201 && response.status != 200)
+    throw new Error("Error uploading raster")
+  options = {
+    method: 'POST',
+    headers: new Headers({ 'X-Api-Key': apiKey })
+  }
+  response = await fetch(  // Start raster commit
+    `${apiServer}/rasters/${rasterId}/commit/`,
+    options
+  )
+  if (response.status != 201)
+    throw new Error("Error committing raster")
+  data = await response.json()
+  const pollInterval = data.poll_interval
+  isReady = false
+  options = {
+    method: 'GET',
+    headers: new Headers({ 'X-Api-Key': apiKey })
+  }
+  const timeout = Date.now() + (10 * 60 * 1000)  // 10 minutes timeout for polling
+  do {  // Check raster commit status
+      await sleep(pollInterval)
+      response = await fetch(
+        `${apiServer}/rasters/${rasterId}/`,
+        options
+      )
+      if (Date.now() > timeout || response.status != 200)
+        break
+      data = await response.json()
+      isReady = (data.status == "ready")
+  }
+  while (!isReady)  // Poll until complete
+  return isReady  // If true, the raster is ready and you can detect on it

@@ -1,0 +1,11 @@
+lang: Python
+label: Python (requests, py3)
+source: |
+  # Up to user: errors management
+  import requests  # https://pypi.org/project/requests/
+  url = 'https://app.picterra.ch/public/api/v1/detectors/'
+  api_key = '123456789'  # Get in on Picterra platform
+  headers =  { 'X-Api-Key': api_key }  
+  r = requests.get(url, headers=headers)
+  assert r.status_code == 200, "Error listing detectors"
+  print(r.json()) # [{"name": "cars-detector", "id": "a1-s.."}, {..}, ..]
